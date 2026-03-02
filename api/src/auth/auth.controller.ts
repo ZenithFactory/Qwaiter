@@ -50,7 +50,7 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('me')
+  @Get('me')
   getMe(@Request() req: any) {
     return req.user; // JwtStrategy validate()
   }
