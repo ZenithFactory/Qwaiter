@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Post,
   Request,
   Res,
@@ -34,6 +35,7 @@ export class AuthController {
     return this.authService.logout(response);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('update')
   async update(
     @Body() body: { email?: string; username?: string; password?: string },
