@@ -11,6 +11,7 @@ import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { UpdateDto } from './dto/update.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -37,7 +38,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('update')
   async update(
-    @Body() body: { email?: string; username?: string; password?: string },
+    @Body() body: UpdateDto,
     @Res({ passthrough: true }) response: Response,
   ) {
     return this.authService.update(
