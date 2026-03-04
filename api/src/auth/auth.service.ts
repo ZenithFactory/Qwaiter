@@ -106,9 +106,11 @@ export class AuthService {
     };
     const token = this.jwtService.sign(payload); // generate token
 
+    const isProduction = process.env.NODE_ENV === 'production';
+
     response.cookie('access_token', token, {
       httpOnly: true, // JS can't access
-      secure: true, // true if using https
+      secure: isProduction, // enforce HTTPS in production, allow HTTP in dev
       sameSite: 'strict', // CSRF DEFENSE
       maxAge: 1000 * 60 * 60 * 24, // 1 DAY
     });
