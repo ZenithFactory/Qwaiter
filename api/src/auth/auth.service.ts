@@ -179,11 +179,7 @@ export class AuthService {
     });
   }
 
-  async verifiyForgotPassword(
-    email: string,
-    code: string,
-    newPassword: string,
-  ) {
+  async verifyForgotPassword(email: string, code: string, newPassword: string) {
     this.verifyAndGetData(email, 'forgot-password', code);
 
     const user = await this.userRepository.findOne({ where: { email } });

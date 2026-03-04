@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Body,
   Controller,
@@ -15,6 +17,7 @@ import { UpdateDto } from './dto/update.dto';
 import { VerifyCodeDto } from './dto/verify/verify-code.dto';
 import { ForgotPasswordDto } from './dto/verify/forgot-password.dto';
 import { ResetPasswordDto } from './dto/verify/reset-password.dto';
+import { verifyUpdateDto } from './dto/verify/verify-update.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -28,7 +31,7 @@ export class AuthController {
     return this.authService.login(body.email, body.password, response);
   }
 
-  @Post('verifyLogin')
+  @Post('verify-login')
   async verifyLogin(
     @Body() body: VerifyCodeDto,
     @Res({ passthrough: true }) response: any,
@@ -41,7 +44,7 @@ export class AuthController {
     return this.authService.register(body.email, body.username, body.password);
   }
 
-  @Post('verifyRegister')
+  @Post('verify-register')
   async registerVerify(@Body() body: VerifyCodeDto) {
     return this.authService.verifyRegister(body.email, body.code);
   }
@@ -62,10 +65,10 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('verifyUpdate')
+  @Post('verify-update')
   async updateVerify(
     @Request() req: any,
-    @Body() body: { code: string },
+    @Body() body: verifyUpdateDto,
     @Res({ passthrough: true }) response: any,
   ) {
     return this.authService.verifyUpdate(req.user.email, body.code, response);
@@ -78,7 +81,7 @@ export class AuthController {
 
   @Post('reset-password')
   async resetPassword(@Body() body: ResetPasswordDto) {
-    return this.authService.verifiyForgotPassword(
+    return this.authService.verifyForgotPassword(
       body.email,
       body.code,
       body.newPassword,

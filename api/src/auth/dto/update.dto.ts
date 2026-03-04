@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class UpdateDto {
@@ -9,11 +8,11 @@ export class UpdateDto {
 
   @IsOptional()
   @IsString()
-  @MinLength(6, { message: 'Username must be more than 6 characters!' })
+  @MinLength(6, { message: 'Username must be at least 6 characters!' })
   username?: string;
 
   @IsOptional()
   @IsString()
-  @MinLength(8, { message: 'The password needs to be 8 character!' })
+  @MinLength(8, { message: 'The password needs at least 8 character!' })
   password?: string;
 }
