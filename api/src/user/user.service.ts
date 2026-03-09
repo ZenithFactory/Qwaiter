@@ -49,7 +49,9 @@ export class UserService {
         "You can't delete someone else's restaurant!",
       );
 
-    await this.restaurantRepository.delete(restaurant);
+    await this.restaurantRepository.delete({
+      restaurantID: restaurant.restaurantID,
+    });
     return { message: 'Restaurant was successfully deleted!' };
   }
 
