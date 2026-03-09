@@ -5,6 +5,8 @@ import {
   Request,
   Body,
   Delete,
+  Get,
+  Param,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -31,5 +33,11 @@ export class UserController {
   deleteRestaurant(@Request() req: any, @Body() body: DeleteRestaurantDto) {
     const ownerID = req.user.id;
     return this.userService.deleteRestaurant(ownerID, body.restaurantID);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('restaurant/:id')
+  getRestaurant(@Request() req: any, @Param('id') restaurantID: string) {
+    return this.userService.getRestaurantByID(req.user.id, restaurantID);
   }
 }
