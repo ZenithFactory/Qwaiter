@@ -16,6 +16,7 @@ import { DeleteRestaurantDto } from './dto/deleteRestaurant.dto';
 import { UpdateRestaurantDto } from './dto/updateRestaurant.dto';
 import { createTableDto } from './dto/createTable.dto';
 import { deleteTableDto } from './dto/deleteTable.dto';
+import { updateTableDto } from './dto/updateTable.dto';
 
 interface AuthRequest extends Request {
   user: {
@@ -85,7 +86,19 @@ export class UserController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('tables')
+  @Post('update/table/:restaurantID/:tableID')
+  updateTable(
+    @Req() req: AuthRequest,
+    @Param('restaurantID') restaurantID: string,
+    @Param('tableID') tableID: string,
+    @Body() body: updateTableDto,
+  ) {
+    const ownerID = req.user.id;
+    return this.userService.updateTable(ownerID, restaurantID, tableID, body);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('tables/:restaurantID')
   getTableByRestaurant(
     @Req() req: AuthRequest,
     @Param('restaurantID') restaurantID: string,

@@ -9,6 +9,7 @@ import { User } from '../entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UpdateRestaurantDto } from './dto/updateRestaurant.dto';
 import { Table } from '../entities/table.entity';
+import { updateTableDto } from './dto/updateTable.dto';
 
 @Injectable()
 export class UserService {
@@ -161,5 +162,40 @@ export class UserService {
       );
 
     return restaurant.tables;
+  }
+
+  async updateTable(
+    ownerID: string,
+    restaurantID: string,
+    tableID: string,
+    dto: updateTableDto,
+  ) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { restaurantID },
+    });
+
+    if (!restaurant) throw new NotFoundException('Restaurant not found!');
+
+    if (ownerID !== restaurant.ownerID)
+      throw new ForbiddenException(
+        "You can't update a table of someone else's restaurant!",
+      );
+
+    const table = await this.tableRepository.findOne({
+      where: { tableID, restaurantID: restaurant.restaurantID },
+    });
+
+    if (!table)
+      throw new NotFoundException('Table not found in this restaurant!');
+
+    if (dto.tableName !== undefined) table.tableName = dto.tableName;
+    if (dto.authCode !== undefined) table.authCode = dto.authCode;
+
+    await this.tableRepository.save(table);
+
+    return {
+      message: 'Table was successfully updated!',
+      table,
+    };
   }
 }
