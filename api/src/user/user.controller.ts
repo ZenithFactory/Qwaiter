@@ -86,15 +86,10 @@ export class UserController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('update/table/:restaurantID/:tableID')
-  updateTable(
-    @Req() req: AuthRequest,
-    @Param('restaurantID') restaurantID: string,
-    @Param('tableID') tableID: string,
-    @Body() body: updateTableDto,
-  ) {
+  @Post('update/table')
+  updateTable(@Req() req: AuthRequest, @Body() body: updateTableDto) {
     const ownerID = req.user.id;
-    return this.userService.updateTable(ownerID, restaurantID, tableID, body);
+    return this.userService.updateTable(ownerID, body);
   }
 
   @UseGuards(JwtAuthGuard)

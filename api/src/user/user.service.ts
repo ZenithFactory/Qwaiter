@@ -164,12 +164,10 @@ export class UserService {
     return restaurant.tables;
   }
 
-  async updateTable(
-    ownerID: string,
-    restaurantID: string,
-    tableID: string,
-    dto: updateTableDto,
-  ) {
+  async updateTable(ownerID: string, dto: updateTableDto) {
+    const restaurantID = dto.restaurantID;
+    const tableID = dto.tableID;
+
     const restaurant = await this.restaurantRepository.findOne({
       where: { restaurantID },
     });
