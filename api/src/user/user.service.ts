@@ -13,4 +13,10 @@ export class UserService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
   ) {}
+
+  async createRestaurant(
+    ownerID: string,
+    restaurantName: string,
+    address: string,
+  ) {}
 }
