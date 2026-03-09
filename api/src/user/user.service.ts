@@ -124,4 +124,28 @@ export class UserService {
       table,
     };
   }
+
+  async deleteTable(ownerID: string, restaurantID: string, tableID: string) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { restaurantID },
+    });
+
+    if (!restaurant) throw new NotFoundException('Restaurant not found!');
+
+    if (ownerID !== restaurant.ownerID)
+      throw new ForbiddenException(
+        "You can't delete someone else's restaurant's table!",
+      );
+
+    const table = await this.tableRepository.findOne({
+      where: { tableID, restaurantID: restaurant.restaurantID },
+    });
+
+    if (!table)
+      throw new NotFoundException('Table not found in this restaurant!');
+
+    await this.tableRepository.delete({ tableID: table.tableID });
+
+    return { message: 'Table was successfully deleted!' };
+  }
 }
