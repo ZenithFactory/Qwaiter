@@ -16,7 +16,7 @@ import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { MailService } from '../../mail/mail.service';
+import { MailService } from '../mail/mail.service';
 import { UpdateDto } from './dto/update.dto';
 
 type PendingAction = {

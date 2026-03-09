@@ -10,7 +10,7 @@ import { MenuItem } from './entities/menuitem.entity';
 import { Category } from './entities/category.entity';
 import { Staff } from './entities/staff.entity';
 import { AuthModule } from './auth/auth.module';
-import { MailModule } from '../mail/mail.module';
+import { MailModule } from './mail/mail.module';
 import { UserModule } from './user/user.module';
 
 @Module({
