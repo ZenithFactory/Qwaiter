@@ -11,6 +11,7 @@ import { Category } from './entities/category.entity';
 import { Staff } from './entities/staff.entity';
 import { AuthModule } from './auth/auth.module';
 import { MailModule } from '../mail/mail.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { MailModule } from '../mail/mail.module';
     }),
     AuthModule,
     MailModule,
+    UserModule,
   ],
   controllers: [],
   providers: [],
