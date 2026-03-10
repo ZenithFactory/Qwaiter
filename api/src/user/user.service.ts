@@ -14,6 +14,7 @@ import { updateTableDto } from './dto/updateTable.dto';
 import { CreateWorkerDto } from './dto/createWorker.dto';
 import { Staff } from '../entities/staff.entity';
 import * as bcrypt from 'bcrypt';
+import { UpdateWorkerDto } from './dto/updateWorker.dto';
 
 @Injectable()
 export class UserService {
@@ -256,5 +257,48 @@ export class UserService {
       );
 
     return restaurant.staffMembers;
+  }
+
+  async updateWorker(ownerID: string, dto: UpdateWorkerDto) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { restaurantID: dto.restaurantID },
+      relations: ['staffMembers'],
+    });
+
+    if (!restaurant) throw new NotFoundException('Restaurant not found!');
+    if (ownerID !== restaurant.ownerID)
+      throw new ForbiddenException(
+        "You can't update someone else's restaurant staff member!",
+      );
+
+    const worker = await this.staffRepository.findOne({
+      where: { id: dto.workerID },
+    });
+    if (!worker) throw new NotFoundException('Worker not found!');
+
+    const workerInRestaurant = restaurant.staffMembers.find(
+      (staff) => staff.id == dto.workerID,
+    );
+
+    if (!workerInRestaurant)
+      throw new ForbiddenException(
+        'This worker does not belong to this restaurant!',
+      );
+
+    if (dto.name) worker.name = dto.name;
+    if (dto.username) worker.username = dto.username;
+    if (dto.password) worker.password = await bcrypt.hash(dto.password, 10);
+    if (dto.role) worker.role = dto.role;
+
+    await this.staffRepository.save(worker);
+
+    return {
+      message: 'Worker updated successfully!',
+      worker: {
+        name: worker.name,
+        username: worker.username,
+        role: worker.role,
+      },
+    };
   }
 }

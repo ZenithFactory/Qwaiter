@@ -24,6 +24,7 @@ interface AuthRequest extends Request {
   };
 }
 import { CreateWorkerDto } from './dto/createWorker.dto';
+import { UpdateWorkerDto } from './dto/updateWorker.dto';
 
 @Controller('user')
 export class UserController {
@@ -112,5 +113,11 @@ export class UserController {
   @Get('staff/:restaurantID')
   getWorkers(@Request() req: any, @Param('restaurantID') restaurantID: string) {
     return this.userService.getStaffMembers(req.user.id, restaurantID);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('update/staff')
+  updateWorker(@Request() req: any, @Body() body: UpdateWorkerDto) {
+    return this.userService.updateWorker(req.user.id, body);
   }
 }
