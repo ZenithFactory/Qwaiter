@@ -32,6 +32,7 @@ import { DeleteCategoryDto } from './dto/deleteCategory.dto';
 import { UpdateCategoryDto } from './dto/updateCategory.dto';
 import { CreateMenuItemDto } from './dto/createMenuItem.dto';
 import { DeleteMenuItemDto } from './dto/deleteMenuItem.dto';
+import { UpdateMenuItemDto } from './dto/updateMenuItem.dto';
 
 @Controller('user')
 export class UserController {
@@ -174,5 +175,11 @@ export class UserController {
   @Get(':restaurantId/menu')
   getMenu(@Param('restaurantId', ParseUUIDPipe) restaurantID: string) {
     return this.userService.getMenu(restaurantID);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('update/menuItem')
+  updateMenuItem(@Request() req: any, @Body() body: UpdateMenuItemDto) {
+    return this.userService.updateMenuItem(req.user.id, body);
   }
 }
