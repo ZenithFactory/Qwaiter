@@ -1,7 +1,7 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Restaurant } from './restaurant.entity';
 
-enum StaffRole {
+export enum StaffRole {
   ADMIN = 'admin',
   WAITER = 'waiter',
   KITCHEN = 'kitchen',

@@ -5,9 +5,21 @@ import { User } from '../entities/user.entity';
 import { Table } from '../entities/table.entity';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
+import { Staff } from '../entities/staff.entity';
+import { Category } from '../entities/category.entity';
+import { MenuItem } from '../entities/menuitem.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Restaurant, Table])],
+  imports: [
+    TypeOrmModule.forFeature([
+      User,
+      Restaurant,
+      Staff,
+      Table,
+      Category,
+      MenuItem,
+    ]),
+  ],
   controllers: [UserController],
   providers: [UserService],
 })

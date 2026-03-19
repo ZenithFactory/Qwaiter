@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -9,6 +10,20 @@ import { User } from '../entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UpdateRestaurantDto } from './dto/updateRestaurant.dto';
 import { Table } from '../entities/table.entity';
+import { updateTableDto } from './dto/updateTable.dto';
+import { CreateWorkerDto } from './dto/createWorker.dto';
+import { Staff } from '../entities/staff.entity';
+import * as bcrypt from 'bcrypt';
+import { UpdateWorkerDto } from './dto/updateWorker.dto';
+import { CreateCategoryDto } from './dto/createCategory.dto';
+import { Category } from '../entities/category.entity';
+import { DeleteRestaurantDto } from './dto/deleteRestaurant.dto';
+import { DeleteCategoryDto } from './dto/deleteCategory.dto';
+import { UpdateCategoryDto } from './dto/updateCategory.dto';
+import { CreateMenuItemDto } from './dto/createMenuItem.dto';
+import { MenuItem } from '../entities/menuitem.entity';
+import { DeleteMenuItemDto } from './dto/deleteMenuItem.dto';
+import { UpdateMenuItemDto } from './dto/updateMenuItem.dto';
 
 @Injectable()
 export class UserService {
@@ -21,6 +36,15 @@ export class UserService {
 
     @InjectRepository(Table)
     private tableRepository: Repository<Table>,
+
+    @InjectRepository(Staff)
+    private staffRepository: Repository<Staff>,
+
+    @InjectRepository(Category)
+    private categoryRepository: Repository<Category>,
+
+    @InjectRepository(MenuItem)
+    private menuItemRepository: Repository<MenuItem>,
   ) {}
 
   async createRestaurant(
@@ -123,5 +147,387 @@ export class UserService {
       message: 'Table was created successfully!',
       table,
     };
+  }
+
+  async deleteTable(ownerID: string, restaurantID: string, tableID: string) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { restaurantID },
+    });
+
+    if (!restaurant) throw new NotFoundException('Restaurant not found!');
+
+    if (ownerID !== restaurant.ownerID)
+      throw new ForbiddenException(
+        "You can't delete someone else's restaurant's table!",
+      );
+
+    const table = await this.tableRepository.findOne({
+      where: { tableID, restaurantID: restaurant.restaurantID },
+    });
+
+    if (!table)
+      throw new NotFoundException('Table not found in this restaurant!');
+
+    await this.tableRepository.delete({ tableID: table.tableID });
+
+    return { message: 'Table was successfully deleted!' };
+  }
+
+  async getTablesByRestaurant(ownerID: string, restaurantID: string) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { restaurantID, ownerID },
+      relations: ['tables'],
+    });
+
+    if (!restaurant)
+      throw new NotFoundException(
+        "Restaurant not found or you don't own this restaurant!",
+      );
+
+    return restaurant.tables;
+  }
+
+  async updateTable(ownerID: string, dto: updateTableDto) {
+    const restaurantID = dto.restaurantID;
+    const tableID = dto.tableID;
+
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { restaurantID },
+    });
+
+    if (!restaurant) throw new NotFoundException('Restaurant not found!');
+
+    if (ownerID !== restaurant.ownerID)
+      throw new ForbiddenException(
+        "You can't update a table of someone else's restaurant!",
+      );
+
+    const table = await this.tableRepository.findOne({
+      where: { tableID, restaurantID: restaurant.restaurantID },
+    });
+
+    if (!table)
+      throw new NotFoundException('Table not found in this restaurant!');
+
+    if (dto.tableName !== undefined) table.tableName = dto.tableName;
+    if (dto.authCode !== undefined) table.authCode = dto.authCode;
+
+    await this.tableRepository.save(table);
+
+    return {
+      message: 'Table was successfully updated!',
+      table,
+    };
+  }
+  async createWorker(ownerID: string, dto: CreateWorkerDto) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { restaurantID: dto.restaurantID },
+      relations: ['staffMembers'],
+    });
+
+    if (!restaurant) throw new NotFoundException('Restaurant not found!');
+    if (ownerID !== restaurant.ownerID)
+      throw new ForbiddenException(
+        "You can't create worker to someone else's restaurant!",
+      );
+
+    const existingWorker = restaurant.staffMembers.find(
+      (staff) => staff.username == dto.username,
+    );
+
+    if (existingWorker)
+      throw new ConflictException('Username already taken in this restaurant!');
+
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
+
+    const staff = this.staffRepository.create({
+      name: dto.name,
+      username: dto.username,
+      password: hashedPassword,
+      role: dto.role,
+      restaurant: restaurant,
+    });
+
+    await this.staffRepository.save(staff);
+    return {
+      message: 'Worker created successfully',
+      worker: {
+        name: staff.name,
+        username: staff.username,
+        role: staff.role,
+      },
+    };
+  }
+
+  async getStaffMembers(ownerID: string, restaurantID: string) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { restaurantID: restaurantID },
+      relations: ['staffMembers'],
+    });
+
+    if (!restaurant) throw new NotFoundException('Restaurant not found!');
+    if (ownerID !== restaurant.ownerID)
+      throw new ForbiddenException(
+        "You can't get someone else's restaurant staff members!",
+      );
+
+    return restaurant.staffMembers;
+  }
+
+  async updateWorker(ownerID: string, dto: UpdateWorkerDto) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { restaurantID: dto.restaurantID },
+      relations: ['staffMembers'],
+    });
+
+    if (!restaurant) throw new NotFoundException('Restaurant not found!');
+    if (ownerID !== restaurant.ownerID)
+      throw new ForbiddenException(
+        "You can't update someone else's restaurant staff member!",
+      );
+
+    const worker = await this.staffRepository.findOne({
+      where: { id: dto.workerID },
+    });
+    if (!worker) throw new NotFoundException('Worker not found!');
+
+    const workerInRestaurant = restaurant.staffMembers.find(
+      (staff) => staff.id == dto.workerID,
+    );
+
+    if (!workerInRestaurant)
+      throw new ForbiddenException(
+        'This worker does not belong to this restaurant!',
+      );
+
+    if (dto.name) worker.name = dto.name;
+    if (dto.username) worker.username = dto.username;
+    if (dto.password) worker.password = await bcrypt.hash(dto.password, 10);
+    if (dto.role) worker.role = dto.role;
+
+    await this.staffRepository.save(worker);
+
+    return {
+      message: 'Worker updated successfully!',
+      worker: {
+        name: worker.name,
+        username: worker.username,
+        role: worker.role,
+      },
+    };
+  }
+
+  async createCategory(ownerID: string, dto: CreateCategoryDto) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { restaurantID: dto.restaurantID },
+    });
+
+    if (!restaurant) throw new NotFoundException('Restaurant not found!');
+
+    if (restaurant.ownerID != ownerID)
+      throw new ForbiddenException(
+        "You can't add category to someon else's restaurant!",
+      );
+
+    const category = await this.categoryRepository.findOne({
+      where: { name: dto.categoryName, restaurantID: dto.restaurantID },
+    });
+
+    if (category) throw new ConflictException('Category already exists!');
+
+    const newCategory = this.categoryRepository.create({
+      restaurantID: dto.restaurantID,
+      name: dto.categoryName,
+      displayOrder: dto.displayOrder,
+    });
+
+    const savedCategory = await this.categoryRepository.save(newCategory);
+
+    return savedCategory;
+  }
+
+  async getCategories(restaurantID: string) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { restaurantID: restaurantID },
+      relations: ['categories'],
+    });
+
+    if (!restaurant) throw new NotFoundException('Restaurant not found!');
+
+    return restaurant.categories;
+  }
+
+  async deleteCategory(ownerID: string, dto: DeleteCategoryDto) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { restaurantID: dto.restaurantID },
+      relations: ['categories'],
+    });
+
+    if (!restaurant) throw new NotFoundException('Restaurant not found!');
+    if (restaurant.ownerID !== ownerID)
+      throw new ForbiddenException(
+        "You can't delete categories for someone else's restaurant!",
+      );
+
+    const category = restaurant.categories.find(
+      (cat) => cat.id == dto.categoryID,
+    );
+
+    if (!category)
+      throw new NotFoundException('Category not found in this restaurant!');
+
+    await this.categoryRepository.delete({ id: category.id });
+    return { message: 'Category deleted successfully!' };
+  }
+
+  async updateCategory(ownerID: string, dto: UpdateCategoryDto) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { restaurantID: dto.restaurantID },
+      relations: ['categories'],
+    });
+
+    if (!restaurant) throw new NotFoundException('Restaurant not found!');
+    if (restaurant.ownerID !== ownerID)
+      throw new ForbiddenException(
+        "You can't update categories for someone else's restaurant!",
+      );
+
+    const category = restaurant.categories.find(
+      (cat) => cat.id === dto.categoryID,
+    );
+
+    if (!category)
+      throw new NotFoundException('Category not found in this restaurant!');
+
+    if (dto.name) category.name = dto.name;
+    if (dto.displayOrder !== undefined)
+      category.displayOrder = dto.displayOrder;
+
+    const savedCategory = await this.categoryRepository.save(category);
+
+    return savedCategory;
+  }
+
+  async createMenuItem(ownerID: string, dto: CreateMenuItemDto) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { restaurantID: dto.restaurantID },
+      relations: ['categories'],
+    });
+
+    if (!restaurant) throw new NotFoundException('Restaurant not found!');
+
+    if (restaurant.ownerID !== ownerID)
+      throw new ForbiddenException(
+        "You can't create menu item for someone else's restaurant!",
+      );
+
+    if (dto.categoryID) {
+      const category = restaurant.categories.find(
+        (cat) => cat.id === dto.categoryID,
+      );
+
+      if (!category) throw new NotFoundException('Category not found!');
+    }
+
+    const newMenuItem = this.menuItemRepository.create({
+      restaurantID: dto.restaurantID,
+      categoryID: dto.categoryID,
+      name: dto.name,
+      description: dto.description,
+      price: dto.price,
+    });
+
+    const savedMenuItem = await this.menuItemRepository.save(newMenuItem);
+
+    return savedMenuItem;
+  }
+
+  async deleteMenuItem(ownerID: string, dto: DeleteMenuItemDto) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { restaurantID: dto.restaurantID },
+    });
+
+    if (!restaurant) throw new NotFoundException('Restaurant not found!');
+    if (restaurant.ownerID !== ownerID)
+      throw new ForbiddenException(
+        "You can't delete menu item for someone else's restaurant!",
+      );
+
+    const menuItem = await this.menuItemRepository.findOne({
+      where: { id: dto.menuItemID, restaurantID: dto.restaurantID },
+    });
+
+    if (!menuItem)
+      throw new NotFoundException('Menu item not found in this restaurant!');
+
+    await this.menuItemRepository.delete({ id: dto.menuItemID });
+
+    return { message: 'Menu item deleted successfully!' };
+  }
+
+  async getMenuItemById(restaurantID: string, menuItemID: string) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { restaurantID: restaurantID },
+      relations: ['categories', 'categories.items'],
+    });
+
+    if (!restaurant) throw new NotFoundException('Restaurant not found!');
+
+    // Search through all categories to find the menu item beloging to this restaurant
+    const menuItem = await this.menuItemRepository.findOne({
+      where: { id: menuItemID, restaurantID: restaurantID },
+    });
+
+    if (!menuItem)
+      throw new NotFoundException('Menu item not found in this restauratn!');
+
+    return menuItem;
+  }
+
+  async getMenu(restaurantID: string) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { restaurantID },
+      relations: ['categories', 'categories.items'],
+    });
+
+    if (!restaurant) throw new NotFoundException('Restaurant not found!');
+    return restaurant.categories;
+  }
+
+  async updateMenuItem(ownerID: string, dto: UpdateMenuItemDto) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { restaurantID: dto.restaurantID },
+    });
+
+    if (!restaurant) throw new NotFoundException('Restaurant not found!');
+
+    if (ownerID !== restaurant.ownerID)
+      throw new ForbiddenException(
+        "You can't update menuItem for someone else's restaurant!",
+      );
+
+    const menuItem = await this.menuItemRepository.findOne({
+      where: { id: dto.menuItemID, restaurantID: restaurant.restaurantID },
+    });
+
+    if (!menuItem)
+      throw new NotFoundException('Menu item not found in this restaurant!');
+
+    if (dto.categoryID) {
+      const category = await this.categoryRepository.findOne({
+        where: { id: dto.categoryID, restaurantID: dto.restaurantID },
+      });
+      if (!category)
+        throw new NotFoundException('Category not found in this restaurant!');
+      if (dto.categoryID) menuItem.categoryID = dto.categoryID;
+    }
+
+    if (dto.name) menuItem.name = dto.name;
+    if (dto.description) menuItem.description = dto.description;
+    if (dto.price !== undefined) menuItem.price = dto.price;
+
+    const savedMenuItem = await this.menuItemRepository.save(menuItem);
+
+    return savedMenuItem;
   }
 }
