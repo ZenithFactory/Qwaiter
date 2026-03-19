@@ -335,4 +335,15 @@ export class UserService {
 
     return savedCategory;
   }
+
+  async getCategories(restaurantID: string) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { restaurantID: restaurantID },
+      relations: ['categories'],
+    });
+
+    if (!restaurant) throw new NotFoundException('Restaurant not found!');
+
+    return restaurant.categories;
+  }
 }
