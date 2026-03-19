@@ -7,6 +7,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
 } from '@nestjs/common';
 import { Request } from '@nestjs/common';
 import { UserService } from './user.service';
@@ -27,6 +28,7 @@ import { CreateWorkerDto } from './dto/createWorker.dto';
 import { UpdateWorkerDto } from './dto/updateWorker.dto';
 import { CreateCategoryDto } from './dto/createCategory.dto';
 import { DeleteCategoryDto } from './dto/deleteCategory.dto';
+import { UpdateCategoryDto } from './dto/updateCategory.dto';
 
 @Controller('user')
 export class UserController {
@@ -139,5 +141,11 @@ export class UserController {
   @Delete('delete/category')
   deleteCategory(@Request() req: any, @Body() body: DeleteCategoryDto) {
     return this.userService.deleteCategory(req.user.id, body);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('update/categories')
+  updateCategory(@Request() req: any, @Body() body: UpdateCategoryDto) {
+    return this.userService.updateCategory(req.user.id, body);
   }
 }
