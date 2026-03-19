@@ -30,6 +30,7 @@ import { CreateCategoryDto } from './dto/createCategory.dto';
 import { DeleteCategoryDto } from './dto/deleteCategory.dto';
 import { UpdateCategoryDto } from './dto/updateCategory.dto';
 import { CreateMenuItemDto } from './dto/createMenuItem.dto';
+import { DeleteMenuItemDto } from './dto/deleteMenuItem.dto';
 
 @Controller('user')
 export class UserController {
@@ -153,5 +154,11 @@ export class UserController {
   @Post('create/menuItem')
   createMenuItem(@Request() req: any, @Body() body: CreateMenuItemDto) {
     return this.userService.createMenuItem(req.user.id, body);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('delete/menuItem')
+  deleteMenuItem(@Request() req: any, @Body() body: DeleteMenuItemDto) {
+    return this.userService.deleteMenuItem(req.user.id, body);
   }
 }
