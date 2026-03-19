@@ -17,6 +17,8 @@ import * as bcrypt from 'bcrypt';
 import { UpdateWorkerDto } from './dto/updateWorker.dto';
 import { CreateCategoryDto } from './dto/createCategory.dto';
 import { Category } from '../entities/category.entity';
+import { DeleteRestaurantDto } from './dto/deleteRestaurant.dto';
+import { DeleteCategoryDto } from './dto/deleteCategory.dto';
 
 @Injectable()
 export class UserService {
@@ -345,5 +347,28 @@ export class UserService {
     if (!restaurant) throw new NotFoundException('Restaurant not found!');
 
     return restaurant.categories;
+  }
+
+  async deleteCategory(ownerID: string, dto: DeleteCategoryDto) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { restaurantID: dto.restaurantID },
+      relations: ['categories'],
+    });
+
+    if (!restaurant) throw new NotFoundException('Restaurant not found!');
+    if (restaurant.ownerID !== ownerID)
+      throw new ForbiddenException(
+        "You can't delete categories for someone else's restaurant!",
+      );
+
+    const category = restaurant.categories.find(
+      (cat) => cat.id == dto.categoryID,
+    );
+
+    if (!category)
+      throw new NotFoundException('Category not found in this restaurant!');
+
+    await this.categoryRepository.delete({ id: category.id });
+    return { message: 'Category deleted successfully!' };
   }
 }
