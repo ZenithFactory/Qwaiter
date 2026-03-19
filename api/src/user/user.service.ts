@@ -19,6 +19,7 @@ import { CreateCategoryDto } from './dto/createCategory.dto';
 import { Category } from '../entities/category.entity';
 import { DeleteRestaurantDto } from './dto/deleteRestaurant.dto';
 import { DeleteCategoryDto } from './dto/deleteCategory.dto';
+import { UpdateCategoryDto } from './dto/updateCategory.dto';
 
 @Injectable()
 export class UserService {
@@ -370,5 +371,33 @@ export class UserService {
 
     await this.categoryRepository.delete({ id: category.id });
     return { message: 'Category deleted successfully!' };
+  }
+
+  async updateCategory(ownerID: string, dto: UpdateCategoryDto) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { restaurantID: dto.restaurantID },
+      relations: ['categories'],
+    });
+
+    if (!restaurant) throw new NotFoundException('Restaurant not found!');
+    if (restaurant.ownerID !== ownerID)
+      throw new ForbiddenException(
+        "You can't update categories for someone else's restaurant!",
+      );
+
+    const category = restaurant.categories.find(
+      (cat) => cat.id === dto.categoryID,
+    );
+
+    if (!category)
+      throw new NotFoundException('Category not found in this restaurant!');
+
+    if (dto.name) category.name = dto.name;
+    if (dto.displayOrder !== undefined)
+      category.displayOrder = dto.displayOrder;
+
+    const savedCategory = await this.categoryRepository.save(category);
+
+    return savedCategory;
   }
 }
