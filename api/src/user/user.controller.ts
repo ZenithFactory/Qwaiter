@@ -25,6 +25,7 @@ interface AuthRequest extends Request {
 }
 import { CreateWorkerDto } from './dto/createWorker.dto';
 import { UpdateWorkerDto } from './dto/updateWorker.dto';
+import { CreateCategoryDto } from './dto/createCategory.dto';
 
 @Controller('user')
 export class UserController {
@@ -119,5 +120,11 @@ export class UserController {
   @Post('update/staff')
   updateWorker(@Request() req: any, @Body() body: UpdateWorkerDto) {
     return this.userService.updateWorker(req.user.id, body);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('create/category')
+  createCategory(@Request() req: any, @Body() body: CreateCategoryDto) {
+    return this.userService.createCategory(req.user.id, body);
   }
 }
