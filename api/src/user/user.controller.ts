@@ -127,4 +127,10 @@ export class UserController {
   createCategory(@Request() req: any, @Body() body: CreateCategoryDto) {
     return this.userService.createCategory(req.user.id, body);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('categories/:restaurantID')
+  getCategories(@Param('restaurantID') restaurantID: string) {
+    return this.userService.getCategories(restaurantID);
+  }
 }
