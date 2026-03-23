@@ -6,6 +6,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Table } from '../entities/table.entity';
+import { MenuItem } from '../entities/menuitem.entity';
+import { Order } from '../entities/order.entity';
+import { OrderItem } from '../entities/order-item.entity';
 
 @Module({
   imports: [
@@ -17,7 +20,7 @@ import { Table } from '../entities/table.entity';
       inject: [ConfigService],
     }),
 
-    TypeOrmModule.forFeature([Table]),
+    TypeOrmModule.forFeature([Table, MenuItem, Order, OrderItem]),
   ],
   controllers: [GuestController],
   providers: [GuestService, GuestGuard],
