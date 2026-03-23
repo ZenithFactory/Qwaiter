@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { GuestService } from './guest.service';
 import { GuestGuard } from './guest.guard';
 import { CreateOrderDto } from './dto/order-item.dto';
+import { LeaveTableDto } from './dto/leave-table.dto';
 
 @Controller('guest')
 export class GuestController {
@@ -17,5 +18,11 @@ export class GuestController {
   @Post('order')
   async order(@Body() body: CreateOrderDto) {
     return this.guestService.createOrder(body);
+  }
+
+  @UseGuards(GuestGuard)
+  @Post('leave-table')
+  async leaveTable(@Body() body: LeaveTableDto) {
+    return this.guestService.leaveTable(body);
   }
 }

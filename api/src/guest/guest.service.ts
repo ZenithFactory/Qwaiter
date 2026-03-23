@@ -12,6 +12,7 @@ import { CreateOrderDto } from './dto/order-item.dto';
 import { MenuItem } from '../entities/menuitem.entity';
 import { Order, OrderStatus } from '../entities/order.entity';
 import { OrderItem } from '../entities/order-item.entity';
+import { LeaveTableDto } from './dto/leave-table.dto';
 
 @Injectable()
 export class GuestService {
@@ -119,6 +120,23 @@ export class GuestService {
       message: 'Order successfully placed!',
       orderID: savedOrder.id,
       totalAmount: total,
+    };
+  }
+
+  async leaveTable(dto: LeaveTableDto) {
+    const table = await this.tableRepository.findOne({
+      where: { tableID: dto.tableID },
+    });
+
+    if (!table) throw new NotFoundException('Table not found!');
+
+    if (table.authCode !== dto.authCode)
+      throw new BadRequestException('Wrong table code!');
+
+    return {
+      message: 'Table successfully leaved. Thank you for visiting!',
+      tableID: table.tableID,
+      tableName: table.tableName,
     };
   }
 }
