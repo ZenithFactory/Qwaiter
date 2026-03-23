@@ -3,6 +3,7 @@ import { GuestService } from './guest.service';
 import { GuestGuard } from './guest.guard';
 import { CreateOrderDto } from './dto/order-item.dto';
 import { LeaveTableDto } from './dto/leave-table.dto';
+import { MyOrdersDto } from './dto/my-orders.dto';
 
 @Controller('guest')
 export class GuestController {
@@ -24,5 +25,11 @@ export class GuestController {
   @Post('leave-table')
   async leaveTable(@Body() body: LeaveTableDto) {
     return this.guestService.leaveTable(body);
+  }
+
+  @UseGuards(GuestGuard)
+  @Post('my-orders')
+  async getMyOrders(@Body() body: MyOrdersDto) {
+    return this.guestService.getMyOrders(body);
   }
 }

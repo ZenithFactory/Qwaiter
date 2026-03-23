@@ -13,6 +13,7 @@ import { MenuItem } from '../entities/menuitem.entity';
 import { Order, OrderStatus } from '../entities/order.entity';
 import { OrderItem } from '../entities/order-item.entity';
 import { LeaveTableDto } from './dto/leave-table.dto';
+import { MyOrdersDto } from './dto/my-orders.dto';
 
 @Injectable()
 export class GuestService {
@@ -139,6 +140,40 @@ export class GuestService {
       message: 'Table successfully leaved. Thank you for visiting!',
       tableID: table.tableID,
       tableName: table.tableName,
+    };
+  }
+
+  async getMyOrders(dto: MyOrdersDto) {
+    const table = await this.tableRepository.findOne({
+      where: { tableID: dto.tableID },
+    });
+
+    if (!table) throw new NotFoundException('Table not found!');
+
+    if (table.authCode !== dto.authCode)
+      throw new BadRequestException('Wrong table code!');
+
+    const orders = await this.orderRepository.find({
+      where: { tableID: dto.tableID },
+      relations: ['items', 'items.menuItem'],
+      order: { createdAt: 'DESC' },
+    });
+
+    return {
+      tableID: table.tableID,
+      tableName: table.tableName,
+      orders: orders.map((order) => ({
+        orderID: order.id,
+        status: order.status,
+        totalAmount: Number(order.totalAmount),
+        createdAt: order.createdAt,
+        items: order.items.map((item) => ({
+          menuItemName: item.menuItem?.name || 'Unknown item',
+          quantity: item.quantity,
+          unitPrice: Number(item.unitPrice),
+          subtotal: Number(item.unitPrice) * item.quantity,
+        })),
+      })),
     };
   }
 }
