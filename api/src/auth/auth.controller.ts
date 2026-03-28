@@ -17,6 +17,7 @@ import { VerifyCodeDto } from './dto/verify/verify-code.dto';
 import { ForgotPasswordDto } from './dto/verify/forgot-password.dto';
 import { ResetPasswordDto } from './dto/verify/reset-password.dto';
 import { verifyUpdateDto } from './dto/verify/verify-update.dto';
+import { WorkerLoginDto } from './dto/worker-login.dto';
 
 interface AuthenticatedRequest extends ExpressRequest {
   user: {
@@ -101,5 +102,13 @@ export class AuthController {
       email: req.user.email,
       username: req.user.username,
     }; // JwtStrategy validate()
+  }
+
+  @Post('worker-login')
+  async workerLogin(
+    @Body() body: WorkerLoginDto,
+    @Res({ passthrough: true }) response: any,
+  ) {
+    return this.authService.workerLogin(body.username, body.password, response);
   }
 }
