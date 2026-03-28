@@ -28,4 +28,17 @@ class AuthProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<bool> ownerLogin(String email, String password) async {
+    _setState(AuthStatus.loading);
+    try {
+      await _authService.ownerLogin(email, password);
+      pendingEmail = email;
+      _setState(AuthStatus.idle);
+      return true;
+    } catch (e) {
+      _setState(AuthStatus.error, e.toString());
+      return false;
+    }
+  }
 }
