@@ -41,4 +41,17 @@ class AuthProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<bool> verifyLogin(String code) async {
+    _setState(AuthStatus.loading);
+    try {
+      await _authService.verifyLogin(pendingEmail!, code);
+      pendingEmail = null;
+      _setState(AuthStatus.idle);
+      return true;
+    } catch (e) {
+      _setState(AuthStatus.error, e.toString());
+      return false;
+    }
+  }
 }
