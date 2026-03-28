@@ -18,6 +18,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { MailService } from '../mail/mail.service';
 import { UpdateDto } from './dto/update.dto';
+import { Staff } from '../entities/staff.entity';
 
 type PendingAction = {
   code: string;
@@ -33,6 +34,9 @@ export class AuthService {
     private userRepository: Repository<User>,
     private jwtService: JwtService, // to generate token
     private mailService: MailService,
+
+    @InjectRepository(Staff)
+    private staffRepository: Repository<Staff>,
   ) {
     setInterval(
       () => {
@@ -201,5 +205,44 @@ export class AuthService {
 
   async findByEmail(email: string) {
     return this.userRepository.findOne({ where: { email } });
+  }
+
+  async workerLogin(username: string, password: string, response: any) {
+    const staff = await this.staffRepository.findOne({
+      where: { username: username },
+      relations: ['restaurant'],
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        role: true,
+        password: true,
+        restaurant: { restaurantID: true },
+      },
+    });
+
+    if (!staff || !(await bcrypt.compare(password, staff.password))) {
+      throw new UnauthorizedException('Wrong username or password');
+    }
+
+    const payload = {
+      sub: staff.id,
+      username: staff.username,
+      name: staff.name,
+      role: staff.role,
+      restaurantID: staff.restaurant.restaurantID,
+    };
+
+    const token = this.jwtService.sign(payload);
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    response.cookie('access_token', token, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict',
+      maxAge: 1000 * 60 * 60 * 24,
+    });
+
+    return { message: 'Login success' };
   }
 }
