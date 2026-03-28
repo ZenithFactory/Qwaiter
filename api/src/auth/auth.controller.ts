@@ -21,8 +21,11 @@ import { WorkerLoginDto } from './dto/worker-login.dto';
 
 interface AuthenticatedRequest extends ExpressRequest {
   user: {
-    email: string;
+    id: string;
+    email: string | null;
     username: string;
+    role: string;
+    restaurantID: string | null;
   };
 }
 
@@ -64,7 +67,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('update')
   async update(@Request() req: AuthenticatedRequest, @Body() body: UpdateDto) {
-    return this.authService.update(req.user.email, {
+    return this.authService.update(req.user.email!, {
       email: body.email,
       username: body.username,
       password: body.password,
@@ -78,7 +81,7 @@ export class AuthController {
     @Body() body: verifyUpdateDto,
     @Res({ passthrough: true }) response: any,
   ) {
-    return this.authService.verifyUpdate(req.user.email, body.code, response);
+    return this.authService.verifyUpdate(req.user.email!, body.code, response);
   }
 
   @Post('forgot-password')
@@ -99,8 +102,11 @@ export class AuthController {
   @Get('me')
   getMe(@Request() req: AuthenticatedRequest) {
     return {
+      id: req.user.id,
       email: req.user.email,
       username: req.user.username,
+      role: req.user.role,
+      restaurantID: req.user.restaurantID,
     }; // JwtStrategy validate()
   }
 
