@@ -56,4 +56,16 @@ class RestaurantProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<bool> updateRestaurant(String id, String name, String address) async {
+    _setState(RestaurantStatus.loading);
+    try {
+      await _service.updateRestaurant(id, name, address);
+      await fetchRestaurants();
+      return true;
+    } catch (e) {
+      _setState(RestaurantStatus.error, e.toString());
+      return false;
+    }
+  }
 }
