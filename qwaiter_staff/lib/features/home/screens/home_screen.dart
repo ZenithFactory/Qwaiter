@@ -35,8 +35,50 @@ class _OwnerHomeState extends State<_OwnerHome> {
     );
   }
 
+  void _showCreateSheet() {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => const _RestaurantFormSheet(),
+      isScrollControlled: true,
+    );
+  }
+
+  void _showEditSheet(Restaurant restaurant) {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => _RestaurantFormSheet(restaurant: restaurant),
+      isScrollControlled: true,
+    );
+  }
+
+  Future<void> _deleteRestaurant(String id) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete restaurant'),
+        content: const Text('Are you sure?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await context.read<RestaurantProvider>().deleteRestaurant(id);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<RestaurantProvider>();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Restaurants'),
@@ -49,9 +91,49 @@ class _OwnerHomeState extends State<_OwnerHome> {
           ),
         ],
       ),
-      body: const Center(child: Text('Restaurant list - hamarosan')),
+      body: switch (provider.status) {
+        RestaurantStatus.loading => const Center(
+          child: CircularProgressIndicator(),
+        ),
+        RestaurantStatus.error => Center(
+          child: Text(provider.errorMessage ?? 'Something went wrong'),
+        ),
+        RestaurantStatus.idle =>
+          provider.restaurants.isEmpty
+              ? const Center(child: Text('No restaurants yet'))
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: provider.restaurants.length,
+                  itemBuilder: (context, index) {
+                    final r = provider.restaurants[index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: ListTile(
+                        title: ListTile(
+                          title: Text(r.name),
+                          subtitle: Text(r.address),
+                          onTap: () => context.go('/restaurant/${r.id}'),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                onPressed: () => _showEditSheet(r),
+                                icon: const Icon(Icons.edit),
+                              ),
+                              IconButton(
+                                onPressed: () => _deleteRestaurant(r.id),
+                                icon: const Icon(Icons.delete),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+      },
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: _showCreateSheet,
         child: const Icon(Icons.add),
       ),
     );
