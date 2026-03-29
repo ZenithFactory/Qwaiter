@@ -28,6 +28,6 @@ export class Staff {
   })
   role: StaffRole;
 
-  @ManyToOne(() => Restaurant)
+  @ManyToOne(() => Restaurant, { onDelete: 'CASCADE' })
   restaurant: Restaurant;
 }
