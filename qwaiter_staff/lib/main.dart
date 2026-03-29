@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:qwaiter_staff/core/router/app_router.dart';
 import 'package:qwaiter_staff/features/auth/auth_provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:qwaiter_staff/features/restaurant/restaurant_provider.dart';
 
 void main() async {
   await dotenv.load(fileName: '.env');
@@ -15,8 +16,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AuthProvider()..checkAuth(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()..checkAuth()),
+        ChangeNotifierProvider(create: (_) => RestaurantProvider()),
+      ],
       child: _AppWithRouter(),
     );
   }
