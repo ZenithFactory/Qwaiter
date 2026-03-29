@@ -26,11 +26,22 @@ class RestaurantProvider extends ChangeNotifier {
 
   RestaurantStatus status = RestaurantStatus.idle;
   String? errorMessage;
-  List<Restaurant> restaurant = [];
+  List<Restaurant> restaurants = [];
 
   void _setState(RestaurantStatus s, [String? error]) {
     status = s;
     errorMessage = error;
     notifyListeners();
+  }
+
+  Future<void> fetchRestaurants() async {
+    _setState(RestaurantStatus.loading);
+    try {
+      final data = await _service.getRestaurant();
+      restaurants = data.map((e) => Restaurant.fromJson(e)).toList();
+      _setState(RestaurantStatus.idle);
+    } catch (e) {
+      _setState(RestaurantStatus.error, e.toString());
+    }
   }
 }
