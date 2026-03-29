@@ -140,6 +140,115 @@ class _OwnerHomeState extends State<_OwnerHome> {
   }
 }
 
+class _RestaurantFormSheet extends StatefulWidget {
+  final Restaurant? restaurant;
+
+  const _RestaurantFormSheet({this.restaurant});
+
+  @override
+  State<_RestaurantFormSheet> createState() => _RestaurantFormSheetState();
+}
+
+class _RestaurantFormSheetState extends State<_RestaurantFormSheet> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _addressController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.restaurant?.name);
+    _addressController = TextEditingController(
+      text: widget.restaurant?.address,
+    );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _addressController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final name = _nameController.text.trim();
+    final address = _addressController.text.trim();
+    final provider = context.read<RestaurantProvider>();
+
+    bool success;
+
+    if (widget.restaurant == null) {
+      if (name.isEmpty || address.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please fill in all fields')),
+        );
+        return;
+      }
+      success = await provider.createRestaurant(name, address);
+    } else {
+      success = await provider.updateRestaurant(
+        widget.restaurant!.id,
+        name,
+        address,
+      );
+    }
+
+    if (success && mounted) Navigator.pop(context);
+    if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(provider.errorMessage ?? 'Something went wrong'),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isLoading =
+        context.watch<RestaurantProvider>().status == RestaurantStatus.loading;
+    final isEdit = widget.restaurant != null;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 24,
+        right: 24,
+        top: 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            isEdit ? 'Edit restaurant' : 'New restaurant',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _nameController,
+            decoration: const InputDecoration(labelText: 'Name'),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _addressController,
+            decoration: const InputDecoration(labelText: 'Address'),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: isLoading ? null : _submit,
+              child: isLoading
+                  ? const CircularProgressIndicator()
+                  : Text(isEdit ? 'Save' : 'Create'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _WorkerHome extends StatelessWidget {
   const _WorkerHome();
 
