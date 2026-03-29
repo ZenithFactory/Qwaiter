@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:qwaiter_staff/core/network/dio_client.dart';
 import 'package:qwaiter_staff/core/router/app_router.dart';
 import 'package:qwaiter_staff/features/auth/auth_provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:qwaiter_staff/features/restaurant/restaurant_provider.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
+  await DioClient().init();
   runApp(const MyApp());
 }
 
